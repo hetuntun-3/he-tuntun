@@ -1,42 +1,30 @@
 const puffer = document.getElementById("puffer");
 const stage = document.getElementById("stage");
 
-// Music
-const bgm = document.getElementById("bgm");
-const musicToggle = document.getElementById("musicToggle");
-// ---- Background music (lofi.mp3) ----
+// ----- Background music -----
 let bgm = new Audio("lofi.mp3");
 bgm.loop = true;
 bgm.volume = 0.35;
 
-// Browsers block autoplay: start music only after first user gesture
-function startBgm() {
+// On mobile, audio must start from a real gesture.
+// We'll try to start it on first touch/click anywhere.
+let musicStarted = false;
+function startBgmOnce() {
+  if (musicStarted) return;
+  musicStarted = true;
   bgm.play().catch(() => {
-    // If blocked for any reason, user will need another tap/click
+    // If blocked, we'll try again on the next gesture.
+    musicStarted = false;
   });
 }
 
-window.addEventListener(
-  "pointerdown",
-  () => {
-    startBgm();
-  },
-  { once: true }
-);
+window.addEventListener("pointerdown", startBgmOnce, { once: false });
 
-// Drag state
+// ----- Drag state -----
 let dragging = false;
 let offsetX = 0, offsetY = 0;
 let startX = 0, startY = 0;
 let moved = false;
-
-// One shared AudioContext (better than creating a new one every click)
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  return audioCtx;
-}
 
 function clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
@@ -53,57 +41,26 @@ function centerPuffer() {
 window.addEventListener("load", centerPuffer);
 window.addEventListener("resize", centerPuffer);
 
-/** Kiss sound (“mwah”) made from: short noise “smack” + soft pitch glide */
 function playKiss() {
-  const ctx = getAudioCtx();
-  const now = ctx.currentTime;
-
-  // --- Smack: a tiny noise burst through a bandpass filter ---
-  const bufferSize = Math.floor(ctx.sampleRate * 0.08);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    // quick-decay noise for a “lip smack”
-    const t = i / bufferSize;
-    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 3);
-  }
-
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = "bandpass";
-  bandpass.frequency.setValueAtTime(1200, now);
-  bandpass.Q.setValueAtTime(0.9, now);
-
-  const smackGain = ctx.createGain();
-  smackGain.gain.setValueAtTime(0.0001, now);
-  smackGain.gain.linearRampToValueAtTime(0.18, now + 0.005);
-  smackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
-
-  noise.connect(bandpass);
-  bandpass.connect(smackGain);
-  smackGain.connect(ctx.destination);
-
-  noise.start(now);
-  noise.stop(now + 0.11);
-
-  // --- “Mwah” tone: soft sine that glides down slightly ---
+  // Simple “mwah” using WebAudio (works on mobile after a gesture)
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const o = ctx.createOscillator();
+  const g = ctx.createGain();
+
   o.type = "sine";
-  o.frequency.setValueAtTime(520, now);
-  o.frequency.exponentialRampToValueAtTime(260, now + 0.18);
+  o.frequency.value = 520;
 
-  const toneGain = ctx.createGain();
-  toneGain.gain.setValueAtTime(0.0001, now + 0.02);
-  toneGain.gain.linearRampToValueAtTime(0.04, now + 0.06);
-  toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+  g.gain.value = 0.0001;
+  o.connect(g);
+  g.connect(ctx.destination);
 
-  o.connect(toneGain);
-  toneGain.connect(ctx.destination);
+  o.start();
+  g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.03);
+  o.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 0.18);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+  o.stop(ctx.currentTime + 0.26);
 
-  o.start(now + 0.02);
-  o.stop(now + 0.24);
+  setTimeout(() => ctx.close(), 300);
 }
 
 function puff() {
@@ -119,14 +76,17 @@ function spawnHearts(count = 10) {
     const b = document.createElement("div");
     b.className = "bubble";
 
-    // start near bottom, random x across full screen
     const x = Math.random() * (vw - 30);
     const y = vh - 20 - Math.random() * 60;
 
     b.style.left = `${x}px`;
     b.style.top = `${y}px`;
 
-    // slower float (you can adjust these numbers)
+    const pinks = ["#ff7fa3", "#ff95b8", "#ff6f91", "#ff8fab"];
+    const c = pinks[Math.floor(Math.random() * pinks.length)];
+    b.style.setProperty("--heart", c);
+
+    // slower float
     b.style.animationDuration = `${4.5 + Math.random() * 2.5}s`;
 
     stage.appendChild(b);
@@ -142,7 +102,7 @@ function moveTo(clientX, clientY) {
   let x = clientX - r.left - offsetX;
   let y = clientY - r.top - offsetY;
 
-  // allow a bit offscreen so it feels less “blocked”
+  // allow a little offscreen
   const offX = w * 0.35;
   const offY = h * 0.35;
 
@@ -153,64 +113,55 @@ function moveTo(clientX, clientY) {
   puffer.style.top = `${y}px`;
 }
 
-// Drag + click separation
+// IMPORTANT: prevent default on touch/pointer so Chrome doesn’t “scroll” instead.
+function prevent(e) {
+  e.preventDefault();
+}
+
 puffer.addEventListener("pointerdown", (e) => {
+  prevent(e);
+  startBgmOnce(); // try music again here too
+
   dragging = true;
   moved = false;
 
   startX = e.clientX;
   startY = e.clientY;
 
-  puffer.setPointerCapture(e.pointerId);
+  try { puffer.setPointerCapture(e.pointerId); } catch {}
 
   const pr = puffer.getBoundingClientRect();
   offsetX = e.clientX - pr.left;
   offsetY = e.clientY - pr.top;
-});
+}, { passive: false });
 
 puffer.addEventListener("pointermove", (e) => {
   if (!dragging) return;
+  prevent(e);
 
   const dx = Math.abs(e.clientX - startX);
   const dy = Math.abs(e.clientY - startY);
   if (dx > 6 || dy > 6) moved = true;
 
   moveTo(e.clientX, e.clientY);
-});
+}, { passive: false });
 
-puffer.addEventListener("pointerup", () => {
+function endPointer() {
   dragging = false;
 
-  // Only “kiss + hearts” if it was a real click (not a drag)
+  // only treat as “click” if not moved
   if (!moved) {
     puff();
     playKiss();
     spawnHearts(10);
   }
-});
+}
 
-// Keyboard accessibility: Enter/Space triggers kiss
-puffer.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    puff();
-    playKiss();
-    spawnHearts(10);
-  }
-});
+puffer.addEventListener("pointerup", (e) => {
+  prevent(e);
+  endPointer();
+}, { passive: false });
 
-// Music toggle (autoplay will be blocked until user interacts — this counts!)
-musicToggle.addEventListener("change", async () => {
-  if (musicToggle.checked) {
-    try {
-      bgm.volume = 0.35;
-      await bgm.play();
-    } catch (err) {
-      // If browser blocks, user just needs to click anywhere once, then toggle again
-      console.log("Music play blocked by browser:", err);
-      musicToggle.checked = false;
-    }
-  } else {
-    bgm.pause();
-  }
+puffer.addEventListener("pointercancel", () => {
+  dragging = false;
 });
