@@ -2,7 +2,7 @@
   "name": "He Tuntun",
   "short_name": "Tuntun",
   "start_url": ".",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffd6e7",
   "theme_color": "#ffd6e7",
   "icons": [
