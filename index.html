@@ -7,29 +7,29 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <main class="wrap">
+    <header class="top">
+      <h1>He Tuntun 🐡</h1>
+    </header>
 
-  <!-- Fullscreen Stage -->
-  <section class="stage" id="stage" aria-label="Pufferfish playground">
-    <div class="puffer plushImg" id="puffer" role="button" tabindex="0" aria-label="Pufferfish">
-      <img id="pufferImg" src="puffer.png" alt="Plush pufferfish" draggable="false" />
-    </div>
-  </section>
+    <section class="stage" id="stage" aria-label="He Tuntun playground">
+      <div class="puffer plushImg" id="puffer" role="button" tabindex="0" aria-label="He Tuntun">
+        <img id="pufferImg" src="puffer.png" alt="Plush pufferfish" draggable="false" />
+      </div>
+    </section>
 
-  <!-- Floating Header -->
-  <header class="top">
-    <h1>He Tuntun 🐡</h1>
+    <footer class="controls">
+      <label class="toggle">
+        <input id="musicToggle" type="checkbox" />
+        <span>Music</span>
+      </label>
+    </footer>
+  </main>
 
-  </header>
-
-  <!-- Floating Controls -->
-  <footer class="controls">
-  <label class="toggle">
-    <input id="soundToggle" type="checkbox" checked />
-    <span>Sound</span>
-  </label>
-</footer>
-
+  <!-- background music (add lofi.mp3 in same folder) -->
+  <audio id="bgm" src="lofi.mp3" loop preload="auto"></audio>
 
   <script src="app.js"></script>
 </body>
 </html>
+
