@@ -4,6 +4,25 @@ const stage = document.getElementById("stage");
 // Music
 const bgm = document.getElementById("bgm");
 const musicToggle = document.getElementById("musicToggle");
+// ---- Background music (lofi.mp3) ----
+let bgm = new Audio("lofi.mp3");
+bgm.loop = true;
+bgm.volume = 0.35;
+
+// Browsers block autoplay: start music only after first user gesture
+function startBgm() {
+  bgm.play().catch(() => {
+    // If blocked for any reason, user will need another tap/click
+  });
+}
+
+window.addEventListener(
+  "pointerdown",
+  () => {
+    startBgm();
+  },
+  { once: true }
+);
 
 // Drag state
 let dragging = false;
