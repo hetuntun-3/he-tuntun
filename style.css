@@ -30,6 +30,7 @@ html,body{height:100%}
   inset: 0;                 /* full screen */
   border-radius: 0;
   overflow: hidden;
+  touch-action: none; 
   background:
     radial-gradient(600px 300px at 20% 20%, rgba(126,230,255,.18), transparent 60%),
     radial-gradient(700px 400px at 80% 60%, rgba(255,210,125,.10), transparent 60%),
