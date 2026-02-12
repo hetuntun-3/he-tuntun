@@ -34,8 +34,10 @@ body{
 .stage{
   position: fixed;
   inset: 0;
-  overflow:hidden;
+  overflow: hidden;
+  touch-action: none; /* prevents mobile gesture interference */
 }
+
 
 /* Controls */
 .controls{
