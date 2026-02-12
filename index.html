@@ -2,34 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>He Tuntun</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffd6e7">
 </head>
 <body>
-  <main class="wrap">
-    <header class="top">
-      <h1>He Tuntun 🐡</h1>
-    </header>
+  <header class="top">
+    <h1>He Tuntun 🐡</h1>
+  </header>
 
-    <section class="stage" id="stage" aria-label="He Tuntun playground">
-      <div class="puffer plushImg" id="puffer" role="button" tabindex="0" aria-label="He Tuntun">
-        <img id="pufferImg" src="puffer.png" alt="Plush pufferfish" draggable="false" />
-      </div>
-    </section>
-
-    <footer class="controls">
-      <label class="toggle">
-        <input id="musicToggle" type="checkbox" />
-        <span>Music</span>
-      </label>
-    </footer>
+  <main class="stage" id="stage" aria-label="He Tuntun playground">
+    <div class="puffer plushImg" id="puffer" role="button" tabindex="0" aria-label="He Tuntun">
+      <img id="pufferImg" src="puffer.png" alt="Plush pufferfish" draggable="false" />
+    </div>
   </main>
 
-  <!-- background music (add lofi.mp3 in same folder) -->
-  <audio id="bgm" src="lofi.mp3" loop preload="auto"></audio>
+  <footer class="controls" aria-label="Controls">
+    <label class="toggle">
+      <input id="musicToggle" type="checkbox" />
+      <span>Music</span>
+    </label>
+
+    <label class="toggle">
+      <input id="soundToggle" type="checkbox" checked />
+      <span>Sound</span>
+    </label>
+
+    <button id="shareBtn" type="button">Share</button>
+  </footer>
 
   <script src="app.js"></script>
 </body>
